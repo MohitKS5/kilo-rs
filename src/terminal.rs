@@ -1,8 +1,11 @@
 use std::io::{Error, stdin, Stdout, stdout, Write};
+
+use termion::{cursor, terminal_size};
 use termion::event::Key;
 use termion::input::TermRead;
 use termion::raw::{IntoRawMode, RawTerminal};
-use termion::{cursor, terminal_size};
+
+use crate::Position;
 
 pub struct Size {
     pub width: u16,
@@ -13,7 +16,7 @@ pub struct Terminal {
     _stdout: RawTerminal<Stdout>,
 }
 impl Terminal {
-    pub fn new() -> Result<Self, Error>{
+    pub fn default() -> Result<Self, Error>{
         let (width,height)= terminal_size()?;
         Ok(Self{
             size: Size {
@@ -35,10 +38,11 @@ impl Terminal {
         print!("{}", termion::clear::CurrentLine);
     }
 
-    pub fn move_cursor(x: u16, y: u16) {
+    pub fn position_cursor_at(pos: &Position) {
+        let Position{x,y} = pos;
         let x = x.saturating_add(1);
         let y = y.saturating_add(1);
-        print!("{}", cursor::Goto(x,y));
+        print!("{}", cursor::Goto(x as u16,y as u16));
     }
 
     pub fn read_key() -> Result<Key, Error> {

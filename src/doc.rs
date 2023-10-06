@@ -6,6 +6,7 @@ use crate::Row;
 #[derive(Default)]
 pub struct Doc {
     rows: Vec<Row>,
+    pub file_name: Option<String>,
 }
 
 impl Doc {
@@ -17,7 +18,10 @@ impl Doc {
             rows.push(Row::from(line));
         }
 
-        Ok(Self { rows })
+        Ok(Self {
+            rows,
+            file_name: Some(filename.to_string()),
+        })
     }
 
     pub fn row(&self, idx: usize) -> Option<&Row> {
@@ -28,6 +32,6 @@ impl Doc {
         self.rows.is_empty()
     }
     pub fn len(&self) -> usize {
-                            self.rows.len()
-                            }
+        self.rows.len()
+    }
 }

@@ -1,3 +1,5 @@
+extern crate core;
+
 mod editor;
 mod terminal;
 mod row;

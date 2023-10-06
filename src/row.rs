@@ -24,7 +24,10 @@ impl Row {
         let end = min(end, self.text.len());
         let start = min(end, start);
         let mut result = String::new();
-        for grapheme in self.text[..].graphemes(true).skip(start).take(end - start) {
+        for mut grapheme in self.text[..].graphemes(true).skip(start).take(end - start) {
+            if grapheme == "\t" {
+                grapheme = ""
+            }
             result.push_str(grapheme)
         }
         result

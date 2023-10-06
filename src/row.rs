@@ -43,4 +43,28 @@ impl Row {
     pub fn update_len(&mut self) {
         self.len = self.text.graphemes(true).count()
     }
+
+    pub fn insert(&mut self, at: usize, c: char) {
+        if at >= self.len() {
+            self.text.push(c)
+        } else {
+            let left: String = self.text.graphemes(true).take(at).collect();
+            let right: String = self.text.graphemes(true).skip(at).collect();
+            self.text = format!("{}{}{}", left, c, right)
+        }
+        self.update_len()
+    }
+
+    pub fn delete(&mut self, at: usize) {
+        if at >= self.len {
+            return;
+        }
+        let left: String = self.text.graphemes(true).take(at).collect();
+        let right: String = self.text.graphemes(true).skip(at+1).collect();
+        self.text = left + right.as_str();
+    }
+
+    pub fn append_row(&mut self, row: &Self) {
+        self.text+= row.text.as_str()
+    }
 }

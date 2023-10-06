@@ -181,6 +181,15 @@ impl Editor {
         match key {
             Ok(key) => match key {
                 Key::Ctrl('q') => self.quit(),
+                Key::Char(c) => {
+                    self.doc.insert(&self.cursor_position, c);
+                    self.move_cursor(Key::Right);
+                },
+                Key::Delete => self.doc.delete(&self.cursor_position),
+                Key::Backspace => {
+                    self.move_cursor(Key::Left);
+                    self.doc.delete(&self.cursor_position);
+                },
                 Key::Up
                 | Key::Down
                 | Key::Left

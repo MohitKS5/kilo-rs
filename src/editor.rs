@@ -53,7 +53,7 @@ pub struct Editor {
 impl Editor {
     pub fn default() -> Self {
         let args: Vec<String> = env::args().collect();
-        let mut initial_message = "HELP: Ctrl-Q = quit".to_string();
+        let mut initial_message = "HELP: Ctrl-Q = quit, Ctrl-S = save".to_string();
         let doc = if args.len() > 1 {
             let filename = &args[1];
             match Doc::open(filename) {
@@ -190,6 +190,14 @@ impl Editor {
                     self.move_cursor(Key::Left);
                     self.doc.delete(&self.cursor_position);
                 },
+                Key::Ctrl('s') => {
+                    let res = self.doc.save();
+                    if res.is_ok() {
+                        self.status_message = StatusMessage::from("File saved successfully".to_string())
+                    } else {
+                        self.status_message = StatusMessage::from("Failed to save: ".to_string() + res.err().unwrap().to_string().as_str())
+                    }
+                }
                 Key::Up
                 | Key::Down
                 | Key::Left

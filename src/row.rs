@@ -80,4 +80,8 @@ impl Row {
         self.set_text(left);
         Row::from(right.as_str())
     }
+
+    pub fn as_bytes(&self) -> &[u8] {
+        self.text.as_bytes()
+    }
 }

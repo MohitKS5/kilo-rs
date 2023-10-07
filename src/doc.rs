@@ -1,7 +1,5 @@
 use std::fs;
 use std::io::{Error, Write};
-use termion::color::Reset;
-
 use crate::{Position, Row};
 
 #[derive(Default)]
@@ -58,11 +56,11 @@ impl Doc {
             // if cursor at end of document
             let mut row = Row::default();
             row.insert(0, c);
-            self.rows.push(row)
+            self.rows.push(row);
         } else {
             // if cursor within a document
-            let mut row = self.rows.get_mut(at.y).unwrap();
-            row.insert(at.x, c)
+            let row = self.rows.get_mut(at.y).unwrap();
+            row.insert(at.x, c);
         }
     }
 
@@ -73,7 +71,7 @@ impl Doc {
             // cursor is at last character of current row but next row exists
             let next_row = self.rows.remove(at.y + 1); // remove row
             let row = self.rows.get_mut(at.y).unwrap();
-            row.append_row(&next_row) // add contents to previous row
+            row.append_row(&next_row); // add contents to previous row
         } else {
             let row = self.rows.get_mut(at.y).unwrap();
             row.delete(at.x);

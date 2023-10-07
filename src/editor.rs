@@ -1,6 +1,5 @@
 use std::cmp::min;
 use std::env;
-use std::fmt::format;
 use std::io::Error;
 use std::time::{Duration, Instant};
 

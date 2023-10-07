@@ -8,6 +8,7 @@ use crate::{Position, Row};
 pub struct Doc {
     rows: Vec<Row>,
     pub file_name: Option<String>,
+    pub modified: bool
 }
 
 impl Doc {
@@ -21,6 +22,7 @@ impl Doc {
         Ok(Self {
             rows,
             file_name: Some(filename.to_string()),
+            modified: false,
         })
     }
 
@@ -47,6 +49,7 @@ impl Doc {
         self.rows.insert(at.y + 1, new_row)
     }
     pub fn insert(&mut self, at: &Position, c: char) {
+        self.modified = true;
         if c == '\n' {
             self.insert_newline(at);
             return;
@@ -64,6 +67,7 @@ impl Doc {
     }
 
     pub fn delete(&mut self, at: &Position) {
+        self.modified = true;
         let len = self.len();
         if at.x ==  self.rows.get(at.y).unwrap().len() && at.y < len - 1 {
             // cursor is at last character of current row but next row exists
@@ -83,6 +87,7 @@ impl Doc {
                 file.write_all(b"\n")?;
             }
         }
+        self.modified = false;
         Ok(())
     }
 }

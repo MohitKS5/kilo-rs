@@ -1,5 +1,6 @@
 use std::cmp::min;
 use std::env;
+use std::fmt::format;
 use std::io::Error;
 use std::time::{Duration, Instant};
 
@@ -47,6 +48,7 @@ pub struct Editor {
     offset: Position,
     exit: bool,
     status_message: StatusMessage,
+    quit_confirmed: bool
 }
 
 impl Editor {
@@ -72,6 +74,7 @@ impl Editor {
             offset: Position::default(),
             exit: false,
             status_message: StatusMessage::from(initial_message),
+            quit_confirmed: false
         }
     }
     pub fn init(&mut self) {
@@ -92,7 +95,12 @@ impl Editor {
             filename = name.clone();
             filename.truncate(20);
         }
-        let mut status = format!("{} - {}", filename, self.doc.len());
+        let modified_indicator = if self.doc.modified {
+            " (modified)"
+        } else {
+            ""
+        };
+        let mut status = format!("{} - {} lines{}", filename, self.doc.len(), modified_indicator);
         let width = self.terminal.size().width as usize;
         let cursor_indicator = format!(
             "{}:{}",
@@ -178,21 +186,25 @@ impl Editor {
                 Key::Char(c) => {
                     self.doc.insert(&self.cursor_position, c);
                     self.move_cursor(Key::Right);
-                },
+                }
                 Key::Delete => self.doc.delete(&self.cursor_position),
                 Key::Backspace => {
                     self.move_cursor(Key::Left);
                     self.doc.delete(&self.cursor_position);
-                },
+                }
                 Key::Ctrl('s') => {
                     if self.doc.file_name.is_none() {
                         self.doc.file_name = Some(self.prompt("Save as: ").unwrap());
                     }
                     let res = self.doc.save();
                     if res.is_ok() {
-                        self.status_message = StatusMessage::from("File saved successfully".to_string())
+                        self.status_message =
+                            StatusMessage::from("File saved successfully".to_string())
                     } else {
-                        self.status_message = StatusMessage::from("Failed to save: ".to_string() + res.err().unwrap().to_string().as_str())
+                        self.status_message = StatusMessage::from(
+                            "Failed to save: ".to_string()
+                                + res.err().unwrap().to_string().as_str(),
+                        )
                     }
                 }
                 Key::Up
@@ -220,7 +232,7 @@ impl Editor {
             if let Key::Char(c) = Terminal::read_key()? {
                 if c == '\n' {
                     self.status_message = StatusMessage::from(String::new());
-                    break
+                    break;
                 } else if !c.is_control() {
                     input.push(c);
                 }
@@ -246,8 +258,14 @@ impl Editor {
         }
     }
     fn quit(&mut self) {
-        Terminal::clear_screen();
-        self.exit = true;
+        if self.doc.modified && !self.quit_confirmed{
+            let msg = format!("WARNING! File has unsaved changes. Press Ctrl + q again to quit");
+            self.status_message = StatusMessage::from(msg);
+            self.quit_confirmed = true;
+        } else {
+            Terminal::clear_screen();
+            self.exit = true;
+        }
     }
 
     fn refresh_screen(&self) -> Result<(), Error> {

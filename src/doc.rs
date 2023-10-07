@@ -15,7 +15,9 @@ impl Doc {
         let contents = fs::read_to_string(filename)?;
 
         for line in contents.lines() {
-            rows.push(Row::from(line));
+            let mut row = Row::from(line);
+            row.highlight();
+            rows.push(row);
         }
         Ok(Self {
             rows,
@@ -43,7 +45,8 @@ impl Doc {
             self.rows.push(Row::default());
             return;
         }
-        let new_row = self.rows.get_mut(at.y).unwrap().split_at(at.x);
+        let mut new_row = self.rows.get_mut(at.y).unwrap().split_at(at.x);
+        new_row.highlight();
         self.rows.insert(at.y + 1, new_row)
     }
     pub fn insert(&mut self, at: &Position, c: char) {
@@ -56,11 +59,13 @@ impl Doc {
             // if cursor at end of document
             let mut row = Row::default();
             row.insert(0, c);
+            row.highlight();
             self.rows.push(row);
         } else {
             // if cursor within a document
             let row = self.rows.get_mut(at.y).unwrap();
             row.insert(at.x, c);
+            row.highlight();
         }
     }
 
@@ -72,9 +77,11 @@ impl Doc {
             let next_row = self.rows.remove(at.y + 1); // remove row
             let row = self.rows.get_mut(at.y).unwrap();
             row.append_row(&next_row); // add contents to previous row
+            row.highlight();
         } else {
             let row = self.rows.get_mut(at.y).unwrap();
             row.delete(at.x);
+            row.highlight();
         }
     }
     pub fn save(&mut self) -> Result<(), Error> {

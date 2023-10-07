@@ -1,16 +1,21 @@
 use std::cmp::min;
+use termion::color;
 
 use unicode_segmentation::UnicodeSegmentation;
+
+use crate::highlighting;
 
 #[derive(Default, Debug)]
 pub struct Row {
     text: String,
     len: usize,
+    highlighting: Vec<highlighting::Class>,
 }
 
 impl From<&str> for Row {
     fn from(str: &str) -> Self {
         let mut row = Row {
+            highlighting: Vec::new(),
             text: String::from(str),
             len: 0,
         };
@@ -24,12 +29,28 @@ impl Row {
         let end = min(end, self.text.len());
         let start = min(end, start);
         let mut result = String::new();
-        for mut grapheme in self.text[..].graphemes(true).skip(start).take(end - start) {
-            if grapheme == "\t" {
-                grapheme = ""
+        let mut current_hg = &highlighting::Class::default();
+        for (index, grapheme) in self.text[..].graphemes(true).enumerate().skip(start).take(end - start) {
+            if let Some(c) = grapheme.chars().next() {
+                let hg_class = self
+                    .highlighting
+                    .get(index)
+                    .unwrap_or(&highlighting::Class::None);
+                if current_hg != hg_class {
+                    let start_hg =
+                        format!("{}", color::Fg(hg_class.color()));
+                    result.push_str(&start_hg[..]);
+                    current_hg = hg_class;
+                }
+                if c == '\t' {
+                    result.push(' ')
+                } else {
+                    result.push(c)
+                }
             }
-            result.push_str(grapheme)
         }
+        let end_hg = format!("{}", color::Fg(color::Reset));
+        result.push_str(&end_hg[..]);
         result
     }
 
@@ -83,5 +104,17 @@ impl Row {
 
     pub fn as_bytes(&self) -> &[u8] {
         self.text.as_bytes()
+    }
+
+    pub fn highlight(&mut self) {
+        let mut hg = Vec::new();
+        for c in self.text.chars() {
+            if c.is_ascii_digit() {
+                hg.push(highlighting::Class::Number);
+            } else {
+                hg.push(highlighting::Class::None);
+            }
+        }
+        self.highlighting = hg;
     }
 }

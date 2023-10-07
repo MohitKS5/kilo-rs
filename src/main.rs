@@ -4,6 +4,7 @@ mod editor;
 mod terminal;
 mod row;
 mod doc;
+mod highlighting;
 
 pub use terminal::Terminal;
 pub use editor::Position;

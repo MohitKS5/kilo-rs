@@ -40,7 +40,7 @@ impl Row {
         self.text.is_empty()
     }
 
-    pub fn update_len(&mut self) {
+    fn update_len(&mut self) {
         self.len = self.text.graphemes(true).count()
     }
 
@@ -50,7 +50,7 @@ impl Row {
         } else {
             let left: String = self.text.graphemes(true).take(at).collect();
             let right: String = self.text.graphemes(true).skip(at).collect();
-            self.text = format!("{}{}{}", left, c, right)
+            self.set_text(format!("{}{}{}", left, c, right))
         }
         self.update_len()
     }
@@ -60,11 +60,24 @@ impl Row {
             return;
         }
         let left: String = self.text.graphemes(true).take(at).collect();
-        let right: String = self.text.graphemes(true).skip(at+1).collect();
-        self.text = left + right.as_str();
+        let right: String = self.text.graphemes(true).skip(at + 1).collect();
+        self.set_text(left + right.as_str());
+    }
+
+    fn set_text(&mut self, text: String) {
+        self.text = text;
+        self.update_len();
     }
 
     pub fn append_row(&mut self, row: &Self) {
-        self.text+= row.text.as_str()
+        self.text += row.text.as_str();
+        self.update_len();
+    }
+
+    pub fn split_at(&mut self, at: usize) -> Self {
+        let left: String = self.text.graphemes(true).take(at).collect();
+        let right: String = self.text.graphemes(true).skip(at).collect();
+        self.set_text(left);
+        Row::from(right.as_str())
     }
 }

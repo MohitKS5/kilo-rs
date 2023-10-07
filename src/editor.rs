@@ -1,7 +1,6 @@
 use std::cmp::min;
 use std::env;
 use std::io::Error;
-use std::process::exit;
 use std::time::{Duration, Instant};
 
 use termion::color;
@@ -83,11 +82,6 @@ impl Editor {
             if self.exit {
                 break;
             }
-            self.draw_rows();
-            self.draw_status_bar();
-            self.draw_message_bar();
-            Terminal::position_cursor_at(&self.cursor_position.sub(&self.offset));
-            Terminal::flush().unwrap();
             self.on_key_press();
         }
     }
@@ -191,6 +185,9 @@ impl Editor {
                     self.doc.delete(&self.cursor_position);
                 },
                 Key::Ctrl('s') => {
+                    if self.doc.file_name.is_none() {
+                        self.doc.file_name = Some(self.prompt("Save as: ").unwrap());
+                    }
                     let res = self.doc.save();
                     if res.is_ok() {
                         self.status_message = StatusMessage::from("File saved successfully".to_string())
@@ -215,6 +212,23 @@ impl Editor {
         self.scroll();
     }
 
+    fn prompt(&mut self, prompt: &str) -> Result<String, Error> {
+        let mut input = String::new();
+        loop {
+            self.status_message = StatusMessage::from(format!("{}{}", prompt, input));
+            self.refresh_screen()?;
+            if let Key::Char(c) = Terminal::read_key()? {
+                if c == '\n' {
+                    self.status_message = StatusMessage::from(String::new());
+                    break
+                } else if !c.is_control() {
+                    input.push(c);
+                }
+            }
+        }
+        Ok(input)
+    }
+
     fn scroll(&mut self) {
         let Position { x, y } = self.cursor_position;
         let width = self.terminal.size().width as usize;
@@ -235,10 +249,19 @@ impl Editor {
         Terminal::clear_screen();
         self.exit = true;
     }
+
     fn refresh_screen(&self) -> Result<(), Error> {
         Terminal::hide_cursor();
-        Terminal::clear_screen();
         Terminal::position_cursor_at(&Position::default());
+        if self.exit {
+            Terminal::clear_screen();
+            println!("Goodbye.\r");
+        } else {
+            self.draw_rows();
+            self.draw_status_bar();
+            self.draw_message_bar();
+            Terminal::position_cursor_at(&self.cursor_position.sub(&self.offset));
+        }
         Terminal::show_cursor();
         Terminal::flush()
     }

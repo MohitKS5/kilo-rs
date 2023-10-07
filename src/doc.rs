@@ -75,7 +75,7 @@ impl Doc {
             row.delete(at.x);
         }
     }
-    pub fn save(&self) -> Result<(), Error> {
+    pub fn save(&mut self) -> Result<(), Error> {
         if let Some(file_name) = &self.file_name {
             let mut file = fs::File::create(file_name)?;
             for row in &self.rows {
